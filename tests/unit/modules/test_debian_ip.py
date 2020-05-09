@@ -8,6 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import tempfile
 
 # Import Salt Testing Libs
+import salt.utils.files
 from tests.support.mixins import LoaderModuleMockMixin
 from tests.support.unit import TestCase, skipIf
 from tests.support.mock import (
@@ -18,6 +19,11 @@ from tests.support.mock import (
 # Import Salt Libs
 import salt.modules.debian_ip as debian_ip
 import salt.utils.platform
+
+try:
+    from salt.utils.odict import OrderedDict as odict
+except ImportError:
+    from collections import OrderedDict as odict
 
 # Import third party libs
 import jinja2.exceptions

@@ -15,6 +15,7 @@ except ImportError:
 # Import 3rd-party libs
 import copy
 import logging
+from collections.abc import Mapping
 
 # Import salt libs
 import salt.ext.six as six

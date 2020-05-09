@@ -22,10 +22,8 @@
 
 # Import python libs
 from __future__ import absolute_import, unicode_literals, print_function
-try:
-    from collections.abc import Callable
-except ImportError:
-    from collections import Callable
+
+from collections.abc import Callable
 
 # Import 3rd-party libs
 from salt.ext import six

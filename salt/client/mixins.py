@@ -12,6 +12,7 @@ import signal
 import logging
 import weakref
 import traceback
+from collections.abc import Mapping, MutableMapping
 
 # Import Salt libs
 import salt.exceptions
@@ -34,13 +35,6 @@ from salt.ext import six
 
 # Import 3rd-party libs
 import salt.ext.tornado.stack_context
-
-try:
-    from collections.abc import Mapping, MutableMapping
-except ImportError:
-    # pylint: disable=no-name-in-module
-    from collections import Mapping, MutableMapping
-
 
 log = logging.getLogger(__name__)
 

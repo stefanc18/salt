@@ -12,6 +12,7 @@ import pipes
 import pprint
 import re
 import uuid
+from collections.abc import Hashable
 from functools import wraps
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -41,12 +42,6 @@ try:
 except ImportError:
     # jinja < 3.1
     from jinja2 import Markup
-
-try:
-    from collections.abc import Hashable
-except ImportError:
-    # pylint: disable=no-name-in-module
-    from collections import Hashable
 
 log = logging.getLogger(__name__)
 

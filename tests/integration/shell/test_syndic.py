@@ -10,7 +10,6 @@
 # Import python libs
 from __future__ import absolute_import
 import logging
-from collections import OrderedDict
 
 # Import Salt Testing libs
 from tests.support.case import ShellCase
@@ -26,6 +25,11 @@ import salt.utils.platform
 # Import 3rd-party libs
 import psutil
 #import pytest
+
+try:
+    from salt.utils.odict import OrderedDict
+except ImportError:
+    from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 

@@ -17,7 +17,6 @@ import os.path
 import logging
 # pylint: disable=W0611
 import operator  # do not remove
-from collections import Iterable, Mapping  # do not remove
 from functools import reduce  # do not remove
 import datetime  # do not remove.
 import tempfile  # do not remove. Used in salt.modules.file.__clean_tmp
@@ -37,6 +36,8 @@ import glob  # do not remove, used in imported file.py functions
 # do not remove, used in imported file.py functions
 from salt.ext import six
 from salt.ext.six.moves.urllib.parse import urlparse as _urlparse  # pylint: disable=import-error,no-name-in-module
+from collections.abc import Iterable, Mapping
+
 import salt.utils.atomicfile  # do not remove, used in imported file.py functions
 from salt.exceptions import CommandExecutionError, SaltInvocationError
 # pylint: enable=W0611
