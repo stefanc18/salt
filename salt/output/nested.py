@@ -24,6 +24,9 @@ Example output::
                 - World
 '''
 from __future__ import absolute_import, print_function, unicode_literals
+
+from collections.abc import Mapping
+
 # Import python libs
 from numbers import Number
 
@@ -33,11 +36,6 @@ import salt.utils.color
 import salt.utils.odict
 import salt.utils.stringutils
 from salt.ext import six
-
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
 
 
 class NestDisplay(object):

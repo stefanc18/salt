@@ -14,11 +14,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 # Import python libs
 import copy
 import threading
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
-
+from collections.abc import MutableMapping
 from contextlib import contextmanager
 
 from salt.ext import six

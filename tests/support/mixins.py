@@ -24,7 +24,6 @@ import tempfile
 import functools
 import subprocess
 import multiprocessing
-from collections import OrderedDict
 
 # Import Salt Testing Libs
 from tests.support.mock import patch
@@ -50,6 +49,11 @@ from salt._compat import ElementTree as etree
 from salt.ext import six
 from salt.ext.six.moves import zip  # pylint: disable=import-error,redefined-builtin
 from salt.ext.six.moves.queue import Empty  # pylint: disable=import-error,no-name-in-module
+
+try:
+    from salt.utils.odict import OrderedDict
+except ImportError:
+    from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 

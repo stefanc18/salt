@@ -17,6 +17,7 @@ import posixpath
 import re
 import string
 import struct
+from collections.abc import Iterable
 
 # Import Salt libs
 import salt.utils.args

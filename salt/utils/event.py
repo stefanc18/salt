@@ -59,12 +59,7 @@ import fnmatch
 import hashlib
 import logging
 import datetime
-
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
-
+from collections.abc import MutableMapping
 from multiprocessing.util import Finalize
 from salt.ext.six.moves import range
 

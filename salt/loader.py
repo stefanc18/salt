@@ -18,6 +18,7 @@ import functools
 import threading
 import traceback
 import types
+from collections.abc import MutableMapping
 from zipimport import zipimporter
 
 # Import salt libs
@@ -51,10 +52,6 @@ else:
     import imp
     USE_IMPORTLIB = False
 
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
 
 try:
     import pkg_resources

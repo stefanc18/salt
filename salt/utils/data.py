@@ -12,11 +12,7 @@ import fnmatch
 import logging
 import re
 import functools
-
-try:
-    from collections.abc import Mapping, MutableMapping, Sequence
-except ImportError:
-    from collections import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 
 # Import Salt libs
 import salt.utils.dictupdate
