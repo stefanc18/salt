@@ -10,12 +10,7 @@
 '''
 from __future__ import absolute_import, unicode_literals
 import copy
-
-# Import python libs
-try:
-    from collections.abc import Mapping, Sequence, Set
-except ImportError:
-    from collections import Mapping, Sequence, Set
+from collections.abc import Mapping, Sequence, Set
 
 
 class ImmutableDict(Mapping):

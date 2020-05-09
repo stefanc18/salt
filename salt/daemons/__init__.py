@@ -6,11 +6,8 @@ Minion enabling different transports.
 from __future__ import absolute_import, print_function, unicode_literals
 # Import Python Libs
 import sys
+from collections.abc import Iterable, Mapping, Sequence
 
-try:
-    from collections.abc import Iterable, Sequence, Mapping
-except ImportError:
-    from collections import Iterable, Sequence, Mapping
 
 import logging
 

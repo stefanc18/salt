@@ -14,7 +14,6 @@ import stat
 import sys
 import threading
 import time
-from collections import OrderedDict
 
 # Import salt tests support dirs
 from tests.support.paths import (
@@ -46,6 +45,11 @@ from salt.utils.verify import verify_env
 
 # Import salt tests support libs
 from tests.support.processes import SaltMaster, SaltMinion
+
+try:
+    from salt.utils.odict import OrderedDict
+except ImportError:
+    from collections import OrderedDict
 
 log = logging.getLogger(__name__)
 
