@@ -2202,6 +2202,20 @@ class Minion(MinionBase):
         log.debug('Refreshing matchers.')
         self.matchers = salt.loader.matchers(self.opts)
 
+    def grains_only_refresh(self, force_refresh=False, notify=False):
+        '''
+        Refresh the grains
+        '''
+        # This might be a proxy minion
+        if hasattr(self, 'proxy'):
+            proxy = self.proxy
+        else:
+            proxy = None
+        self.opts['grains'] = salt.loader.grains(self.opts, force_refresh, proxy=proxy)
+        if notify:
+            evt = salt.utils.event.get_event('minion', opts=self.opts)
+            evt.fire_event({'complete': True}, tag='/salt/minion/minion_grains_refresh_complete')
+
     # TODO: only allow one future in flight at a time?
     @salt.ext.tornado.gen.coroutine
     def pillar_refresh(self, force_refresh=False):
@@ -2402,6 +2416,11 @@ class Minion(MinionBase):
             if (data.get('force_refresh', False) or
                     self.grains_cache != self.opts['grains']):
                 self.pillar_refresh(force_refresh=True)
+                self.grains_cache = self.opts['grains']
+        elif tag.startswith('grains_only_refresh'):
+            if (data.get('force_refresh', False) or
+                    self.grains_cache != self.opts['grains']):
+                self.grains_only_refresh(force_refresh=True, notify=data.get('notify', False))
                 self.grains_cache = self.opts['grains']
         elif tag.startswith('environ_setenv'):
             self.environ_setenv(tag, data)
