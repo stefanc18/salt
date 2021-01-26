@@ -118,7 +118,7 @@ def _api_get(path, server=None):
             url=_get_url(server['ssl'], server['url'], server['port'], path),
             auth=_get_auth(server['user'], server['password']),
             headers=_get_headers(),
-            verify=False
+            verify=True
     )
     return _api_response(response)
 
@@ -133,7 +133,7 @@ def _api_post(path, data, server=None):
             auth=_get_auth(server['user'], server['password']),
             headers=_get_headers(),
             data=salt.utils.json.dumps(data),
-            verify=False
+            verify=True
     )
     return _api_response(response)
 
@@ -148,7 +148,7 @@ def _api_delete(path, data, server=None):
             auth=_get_auth(server['user'], server['password']),
             headers=_get_headers(),
             params=data,
-            verify=False
+            verify=True
     )
     return _api_response(response)
 

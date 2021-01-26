@@ -53,6 +53,7 @@ the device with username and password.
       host: <ip or dns name of panos host>
       username: <panos username>
       password: <panos password>
+      verify_ssl: True
 
 proxytype
 ^^^^^^^^^
@@ -272,6 +273,7 @@ def init(opts):
 
     # Set configuration details
     DETAILS['host'] = opts['proxy']['host']
+    DETAILS["verify_ssl"] = opts["proxy"].get("verify_ssl", True)
     if 'serial' in opts['proxy']:
         DETAILS['serial'] = opts['proxy'].get('serial')
         if 'apikey' in opts['proxy']:
@@ -318,7 +320,7 @@ def call(payload=None):
                                         method='POST',
                                         decode_type='plain',
                                         decode=True,
-                                        verify_ssl=False,
+                                        verify_ssl=DETAILS["verify_ssl"],
                                         raise_error=True)
         elif DETAILS['method'] == 'dev_pass':
             # Pass credentials without the target declaration
@@ -329,7 +331,7 @@ def call(payload=None):
                                         method='POST',
                                         decode_type='plain',
                                         decode=True,
-                                        verify_ssl=False,
+                                        verify_ssl=DETAILS["verify_ssl"],
                                         raise_error=True)
         elif DETAILS['method'] == 'pan_key':
             # Pass the api key with the target declaration
@@ -341,7 +343,7 @@ def call(payload=None):
                                         method='POST',
                                         decode_type='plain',
                                         decode=True,
-                                        verify_ssl=False,
+                                        verify_ssl=DETAILS["verify_ssl"],
                                         raise_error=True)
         elif DETAILS['method'] == 'pan_pass':
             # Pass credentials with the target declaration
@@ -354,7 +356,7 @@ def call(payload=None):
                                         method='POST',
                                         decode_type='plain',
                                         decode=True,
-                                        verify_ssl=False,
+                                        verify_ssl=DETAILS["verify_ssl"],
                                         raise_error=True)
     except KeyError as err:
         raise salt.exceptions.CommandExecutionError("Did not receive a valid response from host.")
