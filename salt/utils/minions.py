@@ -675,17 +675,20 @@ class CkMinions(object):
                 if mdata is None:
                     continue
                 grains = mdata.get('grains', {})
-                if show_ip:
-                    for ipv4 in grains.get('ipv4', []):
-                        if ipv4 in addrs:
+                for ipv4 in grains.get('ipv4', []):
+                    if ipv4 in addrs:
+                        if show_ip:
                             minions.add((id_, ipv4))
-                            break
-                    for ipv6 in grains.get('ipv6', []):
-                        if ipv6 in addrs:
+                        else:
+                            minions.add(id_)
+                        break
+                for ipv6 in grains.get('ipv6', []):
+                    if ipv6 in addrs:
+                        if show_ip:
                             minions.add((id_, ipv6))
-                            break  
-                else:
-                    minions.add(id_)
+                        else:
+                            minions.add(id_)
+                        break
         return minions
 
     def _all_minions(self, expr=None):
