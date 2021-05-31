@@ -61,6 +61,7 @@ log = logging.getLogger(__name__)
 __virtualname__ = 'pkg'
 
 NILRT_RESTARTCHECK_STATE_PATH = '/var/lib/salt/restartcheck_state'
+PACKAGES_TO_INSTALL_DETACHED = ['ni-sysmgmt-salt-minion-support']
 
 
 def _update_nilrt_restart_state():
@@ -522,7 +523,7 @@ def _process_with_progress(cmd, jid, total_packages_count):
         'stderr': stderr
     }
 
-def _execute_install_command(cmd, parse_output, errors, parsed_packages, jid):
+def _execute_install_command(cmd, parse_output, errors, parsed_packages, jid, should_process_in_detached_mode):
     '''
     Executes a command for the install operation.
     If the command fails, its error output will be appended to the errors list.
@@ -530,11 +531,21 @@ def _execute_install_command(cmd, parse_output, errors, parsed_packages, jid):
     to the parsed_packages dictionary.
     '''
     out = {}
-    if __opts__.get('notify_pkg_progress') and not parse_output:
+    if __opts__.get('notify_pkg_progress') and not parse_output and not should_process_in_detached_mode:
         total_packages_count = _get_total_packages(cmd)
         out = _process_with_progress(cmd, jid, total_packages_count) if total_packages_count != -1 else _call_opkg(cmd)
     else:
-        out = _call_opkg(cmd)
+        if should_process_in_detached_mode and not parse_output:
+            proc = _open_detached_process(cmd)
+            # If the process doesn't complete in 24 hours, standard systemlink install timeout,
+            # the communicate operation will raise a TimeoutExpired. We will let salt report it.
+            stdout, stderr = proc.communicate(timeout=86400)  # pylint: disable=unexpected-keyword-arg
+            out = {}
+            out['retcode'] = proc.returncode
+            if out['retcode'] != 0:
+                out['stderr'] = 'Opkg installation operation failed with: {}'.format(out['retcode'])
+        else:
+            out = _call_opkg(cmd)
 
     if out['retcode'] != 0:
         if out['stderr']:
@@ -543,6 +554,22 @@ def _execute_install_command(cmd, parse_output, errors, parsed_packages, jid):
             errors.append(out['stdout'])
     elif parse_output:
         parsed_packages.update(_parse_reported_packages_from_install_output(out['stdout']))
+
+
+def _open_detached_process(cmd):
+    '''
+    Create a process that is not a child of the current process,
+    otherwise known as a detached process.
+    '''
+    kwargs = {'start_new_session': True}
+    proc = subprocess.Popen(
+        cmd,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        **kwargs
+    )
+    return proc
 
 
 def install(name=None,
@@ -649,6 +676,7 @@ def install(name=None,
 
     cmd_prefix = ['opkg', 'install']
     to_install = []
+    to_install_detached = []
     to_reinstall = []
     to_downgrade = []
 
@@ -688,7 +716,7 @@ def install(name=None,
                     if operator_specified:
                         # Version conditions are sent to the solver as install commands
                         pkgstr = '{0}{1}{2}'.format(pkgname, version_operator, version_string)
-                        to_install.append(pkgstr)
+                        _handle_to_install_package(pkgstr, pkgname, to_install, to_install_detached)
                     else:
                         pkgstr = '{0}={1}'.format(pkgname, version_num)
                         if reinstall and cver and salt.utils.versions.compare(
@@ -702,17 +730,18 @@ def install(name=None,
                                 oper='>=',
                                 ver2=cver,
                                 cmp_func=version_cmp):
-                            to_install.append(pkgstr)
+                            _handle_to_install_package(pkgstr, pkgname, to_install, to_install_detached)
                         else:
                             if not kwargs.get('only_upgrade', False):
                                 to_downgrade.append(pkgstr)
                             else:
                                 # This should cause the command to fail.
-                                to_install.append(pkgstr)
+                                _handle_to_install_package(pkgstr, pkgname, to_install, to_install_detached)
 
     cmds = _build_install_command_list(cmd_prefix, to_install, to_downgrade, to_reinstall)
+    detached_cmds = _build_install_command_list(cmd_prefix, to_install_detached, None, None)
 
-    if not cmds:
+    if not cmds and not detached_cmds:
         return {}
 
     feeds_updated_status = {}
@@ -728,7 +757,9 @@ def install(name=None,
     jid = kwargs.get('__pub_jid')
 
     for cmd in cmds:
-        _execute_install_command(cmd, is_testmode, errors, test_packages, jid)
+        _execute_install_command(cmd, is_testmode, errors, test_packages, jid, False)
+    for cmd in detached_cmds:
+        _execute_install_command(cmd, is_testmode, errors, test_packages, jid, True)
 
     __context__.pop('pkg.list_pkgs', None)
     new = _execute_list_pkgs(list_pkgs_errors, False)
@@ -780,6 +811,20 @@ def install(name=None,
         )
 
     return ret
+
+def _handle_to_install_package(pkg_string, pkg_name, to_install, to_install_detached):
+    '''
+    Check whether the package should be installed by a detached process or not
+    :param pkg_string: Full package string containing the name and the version
+    :param pkg_name: Package name
+    :param to_install: List of packages to be installed normally
+    :param to_install_detached: List of packages to be installed detached
+    :return:
+    '''
+    if pkg_name in PACKAGES_TO_INSTALL_DETACHED:
+        to_install_detached.append(pkg_string)
+    else:
+        to_install.append(pkg_string)
 
 
 def _get_version_info(version_string):
