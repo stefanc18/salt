@@ -1299,6 +1299,9 @@ class PubServer(salt.ext.tornado.tcpserver.TCPServer, object):
                 opts=self.opts,
                 listen=False
             )
+            self.io_loop.add_future(
+                self._send_presence_events(),
+                lambda f: True)
 
     def close(self):
         if self._closing:
@@ -1309,6 +1312,16 @@ class PubServer(salt.ext.tornado.tcpserver.TCPServer, object):
     def __del__(self):
         self.close()
     # pylint: enable=W1701
+
+    @salt.ext.tornado.gen.coroutine
+    def _send_presence_events(self):
+        while True:
+            data = {'present': list(self.present.keys())}
+            self.event.fire_event(
+                data,
+                salt.utils.event.tagify('present', 'presence')
+            )
+            yield salt.ext.tornado.gen.sleep(60)
 
     def _add_client_present(self, client):
         id_ = client.id_
