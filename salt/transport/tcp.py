@@ -340,6 +340,7 @@ class AsyncTCPReqChannel(salt.transport.client.ReqChannel):
     def _package_load(self, load):
         return {
             'enc': self.crypt,
+            'x-ni-api-key': self.opts.get('x-ni-api-key'),
             'load': load,
         }
 
@@ -449,6 +450,7 @@ class AsyncTCPPubChannel(salt.transport.mixins.auth.AESPubClientMixin, salt.tran
     def _package_load(self, load):
         return {
             'enc': self.crypt,
+            'x-ni-api-key': self.opts.get('x-ni-api-key'),
             'load': load,
         }
 
