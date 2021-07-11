@@ -1,3 +1,5 @@
+.. _`Apache 2.0 license`: http://www.apache.org/licenses/LICENSE-2.0.html
+
 ====================
 Introduction to Salt
 ====================
@@ -58,8 +60,8 @@ authentication and encryption are integral to Salt.  Salt takes
 advantage of communication via `msgpack`_, enabling fast and light
 network traffic.
 
-.. _`ZeroMQ`: http://zeromq.org/
-.. _`msgpack`: http://msgpack.org/
+.. _`ZeroMQ`: https://zeromq.org/
+.. _`msgpack`: https://msgpack.org/
 .. _`AES`: https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
 
 Python client interface
@@ -121,13 +123,12 @@ IRC
 ===
 
 The ``#salt`` IRC channel is hosted on the popular `Freenode`_ network. You
-can use the `Freenode webchat client`_ right from your browser.
-
-`Logs of the IRC channel activity`_ are being collected courtesy of Moritz Lenz.
+can use the `Freenode webchat client`_ right from your browser.  `Logs of the
+IRC channel activity`_ are also available.
 
 .. _Freenode: http://freenode.net/irc_servers.shtml
-.. _`Freenode webchat client`: http://webchat.freenode.net/?channels=salt&uio=Mj10cnVlJjk9dHJ1ZSYxMD10cnVl83
-.. _`Logs of the IRC channel activity`: http://irclog.perlgeek.de/salt/
+.. _`Freenode webchat client`: https://webchat.freenode.net/#salt
+.. _`Logs of the IRC channel activity`: https://freenode.logbot.info/salt/
 
 If you wish to discuss the development of Salt itself join us in
 ``#salt-devel``.
@@ -161,7 +162,7 @@ Example Salt States
 ===================
 
 The official ``salt-states`` repository is:
-https://github.com/saltstack/salt-states
+https://github.com/SS-archive/salt-states
 
 A few examples of salt states from the community:
 
@@ -184,10 +185,10 @@ Other community links
 
 - `Salt Stack Inc. <http://www.saltstack.com>`_
 - `Subreddit <http://www.reddit.com/r/saltstack>`_
-- `YouTube <http://www.youtube.com/user/SaltStack>`_
+- `YouTube <https://www.youtube.com/user/SaltStack>`_
 - `Facebook <https://www.facebook.com/SaltStack>`_
 - `Twitter <https://twitter.com/SaltStackInc>`_
-- `Wikipedia page <http://en.wikipedia.org/wiki/Salt_(software)>`_
+- `Wikipedia page <https://en.wikipedia.org/wiki/Salt_(software)>`_
 - `Stack Overflow <https://stackoverflow.com/questions/tagged/salt-stack>`_
 
 Hack the Source
