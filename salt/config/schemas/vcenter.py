@@ -8,15 +8,7 @@
     VCenter configuration schemas
 """
 
-<<<<<<< HEAD
-# Import Python libs
-from __future__ import absolute_import, print_function, unicode_literals
-
-# Import Salt libs
-from salt.utils.schema import ArrayItem, IntegerItem, Schema, StringItem, BooleanItem
-=======
 from salt.utils.schema import ArrayItem, BooleanItem, IntegerItem, Schema, StringItem
->>>>>>> ni-master
 
 
 class VCenterEntitySchema(Schema):
@@ -50,13 +42,7 @@ class VCenterProxySchema(Schema):
     vcenter = StringItem(required=True, pattern=r"[^\s]+")
     mechanism = StringItem(required=True, enum=["userpass", "sspi"])
     username = StringItem()
-<<<<<<< HEAD
-    passwords = ArrayItem(min_items=1,
-                          items=StringItem(),
-                          unique_items=True)
-=======
     passwords = ArrayItem(min_items=1, items=StringItem(), unique_items=True)
->>>>>>> ni-master
     verify_ssl = BooleanItem()
     ca_bundle = StringItem()
 
