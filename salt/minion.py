@@ -22,6 +22,7 @@ from random import randint, shuffle
 from stat import S_IMODE
 import salt.serializers.msgpack
 from binascii import crc32
+from concurrent.futures import ThreadPoolExecutor
 
 # Import Salt Libs
 # pylint: disable=import-error,no-name-in-module,redefined-builtin
@@ -1106,6 +1107,10 @@ class Minion(MinionBase):
         self.ready = False
         self.jid_queue = [] if jid_queue is None else jid_queue
         self.periodic_callbacks = {}
+        if not self.opts.get('multiprocessing', True):
+            process_count_max = self.opts['process_count_max']
+            max_workers = process_count_max if process_count_max > 0 else None
+            self.thread_pool = ThreadPoolExecutor(max_workers=max_workers)
 
         if io_loop is None:
             install_zmq()
@@ -1507,26 +1512,21 @@ class Minion(MinionBase):
                     target=self._target, args=(instance, self.opts, data, self.connected)
                 )
         else:
-            process = threading.Thread(
-                target=self._target,
-                args=(instance, self.opts, data, self.connected),
-                name=data['jid']
-            )
+            self.thread_pool.submit(self._target, instance, self.opts, data, self.connected)
 
         if multiprocessing_enabled:
             with default_signals(signal.SIGINT, signal.SIGTERM):
                 # Reset current signals before starting the process in
                 # order not to inherit the current signal handlers
                 process.start()
-        else:
-            process.start()
 
         # TODO: remove the windows specific check?
-        if multiprocessing_enabled and not salt.utils.platform.is_windows():
-            # we only want to join() immediately if we are daemonizing a process
-            process.join()
-        elif salt.utils.platform.is_windows():
-            self.win_proc.append(process)
+        if multiprocessing_enabled:
+            if not salt.utils.platform.is_windows():
+                # we only want to join() immediately if we are daemonizing a process
+                process.join()
+            else:
+                self.win_proc.append(process)
 
     def ctx(self):
         '''

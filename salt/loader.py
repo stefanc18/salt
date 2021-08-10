@@ -1516,23 +1516,26 @@ class LazyLoader(salt.utils.lazy.LazyDict):
                         self._reload_submodules(mod)
                 else:
                     if USE_IMPORTLIB:
-                        # pylint: disable=no-member
-                        loader = MODULE_KIND_MAP[desc[2]](mod_namespace, fpath)
-                        spec = importlib.util.spec_from_file_location(
-                            mod_namespace, fpath, loader=loader
-                        )
-                        if spec is None:
-                            raise ImportError()
-                        # TODO: Get rid of load_module in favor of
-                        # exec_module below. load_module is deprecated, but
-                        # loading using exec_module has been causing odd things
-                        # with the magic dunders we pack into the loaded
-                        # modules, most notably with salt-ssh's __opts__.
-                        mod = spec.loader.load_module()
-                        #mod = importlib.util.module_from_spec(spec)
-                        #spec.loader.exec_module(mod)
-                        # pylint: enable=no-member
-                        sys.modules[mod_namespace] = mod
+                        try:
+                            mod = sys.modules[mod_namespace]
+                        except KeyError:
+                            # pylint: disable=no-member
+                            loader = MODULE_KIND_MAP[desc[2]](mod_namespace, fpath)
+                            spec = importlib.util.spec_from_file_location(
+                                mod_namespace, fpath, loader=loader
+                            )
+                            if spec is None:
+                                raise ImportError()
+                            # TODO: Get rid of load_module in favor of
+                            # exec_module below. load_module is deprecated, but
+                            # loading using exec_module has been causing odd things
+                            # with the magic dunders we pack into the loaded
+                            # modules, most notably with salt-ssh's __opts__.
+                            mod = spec.loader.load_module()
+                            #mod = importlib.util.module_from_spec(spec)
+                            #spec.loader.exec_module(mod)
+                            # pylint: enable=no-member
+                            sys.modules[mod_namespace] = mod
                     else:
                         with salt.utils.files.fopen(fpath, desc[1]) as fn_:
                             mod = imp.load_module(mod_namespace, fn_, fpath, desc)
