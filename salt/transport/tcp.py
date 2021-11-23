@@ -1318,12 +1318,16 @@ class PubServer(salt.ext.tornado.tcpserver.TCPServer, object):
     @salt.ext.tornado.gen.coroutine
     def _send_presence_events(self):
         while True:
-            data = {'present': list(self.present.keys())}
-            self.event.fire_event(
-                data,
-                salt.utils.event.tagify('present', 'presence')
-            )
-            yield salt.ext.tornado.gen.sleep(60)
+            try:
+                data = {'present': list(self.present.keys())}
+                self.event.fire_event(
+                    data,
+                    salt.utils.event.tagify('present', 'presence')
+                )
+                yield salt.ext.tornado.gen.sleep(60)
+            except Exception as exc:
+                log.warning('Could not publish presence event: %s', str(exc))
+                yield salt.ext.tornado.gen.sleep(2)
 
     def _add_client_present(self, client):
         id_ = client.id_
