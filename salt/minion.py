@@ -1494,10 +1494,11 @@ class Minion(MinionBase):
 
     @salt.ext.tornado.gen.coroutine
     def _handle_decoded_payload(self, data):
-        '''
+        """
         Override this method if you wish to handle the decoded data
         differently.
-        '''
+        """
+
         # Ensure payload is unicode. Disregard failure to decode binary blobs.
         if six.PY2:
             data = salt.utils.data.decode(data, keep=True)
