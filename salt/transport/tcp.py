@@ -482,9 +482,10 @@ class AsyncTCPPubChannel(salt.transport.mixins.auth.AESPubClientMixin, salt.tran
 
     def _package_load(self, load):
         return {
-            'enc': self.crypt,
+            "enc": self.crypt,
             'x-ni-api-key': self.opts.get('x-ni-api-key'),
-            'load': load,
+            "load": load,
+            "version": 2,
         }
 
     @salt.ext.tornado.gen.coroutine
@@ -758,12 +759,26 @@ class TCPReqServerChannel(salt.transport.mixins.auth.AESReqServerMixin, salt.tra
             if "version" in payload:
                 version = payload["version"]
 
+            sign_messages = False
+            if version > 1:
+                sign_messages = True
+
             # intercept the "_auth" commands, since the main daemon shouldn't know
             # anything about our key auth
-            if payload['enc'] == 'clear' and payload.get('load', {}).get('cmd') == '_auth':
-                yield stream.write(salt.transport.frame.frame_msg(
-                    self._auth(payload['load']), header=header))
+            if (
+                payload["enc"] == "clear"
+                and payload.get("load", {}).get("cmd") == "_auth"
+            ):
+                yield stream.write(
+                    salt.transport.frame.frame_msg(
+                        self._auth(payload["load"], sign_messages), header=header
+                    )
+                )
                 raise salt.ext.tornado.gen.Return()
+
+            nonce = None
+            if version > 1:
+                nonce = payload["load"].pop("nonce", None)
 
             # TODO: test
             try:
@@ -785,11 +800,6 @@ class TCPReqServerChannel(salt.transport.mixins.auth.AESReqServerMixin, salt.tra
                     )
                 )
             elif req_fun == "send_private":
-                sign_messages = False
-                nonce = None
-                if version > 1:
-                    sign_messages = True
-                    nonce = payload["load"].get("nonce")
                 stream.write(
                     salt.transport.frame.frame_msg(
                         self._encrypt_private(
