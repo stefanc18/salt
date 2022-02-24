@@ -1354,11 +1354,12 @@ class Subscriber(object):
 
 
 class PubServer(salt.ext.tornado.tcpserver.TCPServer, object):
-    '''
+    """
     TCP publisher
-    '''
-    def __init__(self, opts, io_loop=None):
-        super(PubServer, self).__init__(ssl_options=opts.get('ssl'))
+    """
+
+    def __init__(self, opts, io_loop=None, pack_publish=lambda _: _):
+        super().__init__(ssl_options=opts.get("ssl"))
         self.io_loop = io_loop
         self.opts = opts
         self._closing = False
@@ -1386,6 +1387,10 @@ class PubServer(salt.ext.tornado.tcpserver.TCPServer, object):
             self.io_loop.add_future(
                 self._send_presence_events(),
                 lambda f: True)
+        self._pack_publish = pack_publish
+
+    def pack_publish(self, payload):
+        return self._pack_publish(payload)
 
     def close(self):
         if self._closing:
@@ -1506,8 +1511,9 @@ class PubServer(salt.ext.tornado.tcpserver.TCPServer, object):
     # TODO: ACK the publish through IPC
     @salt.ext.tornado.gen.coroutine
     def publish_payload(self, package, _):
-        log.debug('TCP PubServer sending payload: %s', package)
-        payload = salt.transport.frame.frame_msg(package['payload'])
+        log.debug("TCP PubServer sending payload: %s", package)
+        package = self.pack_publish(package)
+        payload = salt.transport.frame.frame_msg(package["payload"])
 
         to_remove = []
         if 'topic_lst' in package:
@@ -1582,7 +1588,9 @@ class TCPPubServerChannel(salt.transport.server.PubServerChannel):
             self.io_loop = salt.ext.tornado.ioloop.IOLoop.current()
 
         # Spin up the publisher
-        pub_server = PubServer(self.opts, io_loop=self.io_loop)
+        pub_server = PubServer(
+            self.opts, io_loop=self.io_loop, pack_publish=self.pack_publish
+        )
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         _set_tcp_keepalive(sock, self.opts)
@@ -1623,7 +1631,7 @@ class TCPPubServerChannel(salt.transport.server.PubServerChannel):
         '''
         process_manager.add_process(self._publish_daemon, kwargs=kwargs)
 
-    def publish(self, load):
+    def pack_publish(self, load):
         """
         Publish "load" to minions
         """
@@ -1636,19 +1644,7 @@ class TCPPubServerChannel(salt.transport.server.PubServerChannel):
         if self.opts["sign_pub_messages"]:
             master_pem_path = os.path.join(self.opts["pki_dir"], "master.pem")
             log.debug("Signing data packet")
-            payload['sig'] = salt.crypt.sign_message(master_pem_path, payload['load'])
-        # Use the Salt IPC server
-        if self.opts.get('ipc_mode', '') == 'tcp':
-            pull_uri = int(self.opts.get('tcp_master_publish_pull', 4514))
-        else:
-            pull_uri = os.path.join(self.opts['sock_dir'], 'publish_pull.ipc')
-        # TODO: switch to the actual asynchronous interface
-        #pub_sock = salt.transport.ipc.IPCMessageClient(self.opts, io_loop=self.io_loop)
-        pub_sock = salt.utils.asynchronous.SyncWrapper(
-            salt.transport.ipc.IPCMessageClient,
-            (pull_uri,)
-        )
-        pub_sock.connect()
+            payload["sig"] = salt.crypt.sign_message(master_pem_path, payload["load"])
 
         int_payload = {'payload': self.serial.dumps(payload)}
 
@@ -1664,6 +1660,23 @@ class TCPPubServerChannel(salt.transport.server.PubServerChannel):
                 # Send list of miions thru so zmq can target them
                 int_payload['topic_lst'] = match_ids
             else:
-                int_payload['topic_lst'] = load['tgt']
+                int_payload["topic_lst"] = load["tgt"]
+        return int_payload
+
+    def publish(self, load):
+        """
+        Publish "load" to minions
+        """
         # Send it over IPC!
-        pub_sock.send(int_payload)
+        # Use the Salt IPC server
+        # TODO: switch to the actual asynchronous interface
+        # pub_sock = salt.transport.ipc.IPCMessageClient(self.opts, io_loop=self.io_loop)
+        if self.opts.get("ipc_mode", "") == "tcp":
+            pull_uri = int(self.opts.get("tcp_master_publish_pull", 4514))
+        else:
+            pull_uri = os.path.join(self.opts["sock_dir"], "publish_pull.ipc")
+        pub_sock = salt.utils.asynchronous.SyncWrapper(
+            salt.transport.ipc.IPCMessageClient, (pull_uri,)
+        )
+        pub_sock.connect()
+        pub_sock.send(load)
