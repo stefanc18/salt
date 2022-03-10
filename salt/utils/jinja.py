@@ -653,7 +653,11 @@ def symmetric_difference(lst1, lst2):
     return unique([ele for ele in union(lst1, lst2) if ele not in intersect(lst1, lst2)])
 
 
-@jinja2.contextfunction
+if jinja2.__version__ < '3.0.0' :
+    contextfunction = jinja2.contextfunction
+else:
+    contextfunction =  jinja2.pass_context
+@contextfunction
 def show_full_context(ctx):
     return salt.utils.data.simple_types_filter({key: value for key, value in ctx.items()})
 
