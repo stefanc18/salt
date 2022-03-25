@@ -44,10 +44,10 @@ except ImportError:
 
 
 try:
-    from jinja2 import Markup
-except ImportError:
-    # Markup moved to markupsafe in jinja>= 3.1
     from markupsafe import Markup
+except ImportError:
+    # jinja < 3.1
+    from jinja2 import Markup
 
 log = logging.getLogger(__name__)
 
@@ -665,9 +665,9 @@ def symmetric_difference(lst1, lst2):
     return unique([ele for ele in union(lst1, lst2) if ele not in intersect(lst1, lst2)])
 
 
-if jinja2.__version__ < "3.0.0":
+try:
     contextfunction = jinja2.contextfunction
-else:
+except AttributeError:
     contextfunction = jinja2.pass_context
 
 
