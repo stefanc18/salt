@@ -19,7 +19,7 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 # Import third party libs
 import jinja2
 from salt.ext import six
-from jinja2 import BaseLoader, Markup, TemplateNotFound, nodes
+from jinja2 import BaseLoader, TemplateNotFound, nodes
 from jinja2.environment import TemplateModule
 from jinja2.exceptions import TemplateRuntimeError
 from jinja2.ext import Extension
@@ -42,6 +42,12 @@ except ImportError:
     # pylint: disable=no-name-in-module
     from collections import Hashable
 
+
+try:
+    from jinja2 import Markup
+except ImportError:
+    # Markup moved to markupsafe in jinja>= 3.1
+    from markupsafe import Markup
 
 log = logging.getLogger(__name__)
 
