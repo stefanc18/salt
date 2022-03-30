@@ -382,7 +382,7 @@ def _file_changed_nilrt(full_filepath):
     if prev_timestamp != cur_timestamp:
         return True
 
-    return bool(__salt__['cmd.retcode']('md5sum -c {0} --quiet'.format(md5sum_file), output_loglevel="quiet"))
+    return bool(__salt__['cmd.retcode']('md5sum -cs {0}'.format(md5sum_file), output_loglevel="quiet"))
 
 
 def _kernel_modules_changed_nilrt(kernelversion):
@@ -490,7 +490,7 @@ def restartcheck(ignorelist=None, blacklist=None, excludepid=None, **kwargs):
     for kernel in kernel_versions:
         _check_timeout(start_time, timeout)
         if kernel in kernel_current:
-            if __grains__.get('os_family') == NILRT_FAMILY_NAME:
+            if __grains__.get('os_family') == 'NILinuxRT':
                 # Check kernel modules and hardware API's for version changes
                 # If a restartcheck=True event was previously witnessed, propagate it
                 if not _kernel_modules_changed_nilrt(kernel) and \
@@ -524,12 +524,11 @@ def restartcheck(ignorelist=None, blacklist=None, excludepid=None, **kwargs):
     else:
         excludepid = []
 
-    if __grains__.get('os_family') != NILRT_FAMILY_NAME:
-        for service in __salt__['service.get_running']():
-            _check_timeout(start_time, timeout)
-            service_show = __salt__['service.show'](service)
-            if 'ExecMainPID' in service_show:
-                running_services[service] = int(service_show['ExecMainPID'])
+    for service in __salt__['service.get_running']():
+        _check_timeout(start_time, timeout)
+        service_show = __salt__['service.show'](service)
+        if 'ExecMainPID' in service_show:
+            running_services[service] = int(service_show['ExecMainPID'])
 
     owners_cache = {}
     for deleted_file in _deleted_files():
@@ -553,13 +552,12 @@ def restartcheck(ignorelist=None, blacklist=None, excludepid=None, **kwargs):
             if not packagename:
                 packagename = name
             owners_cache[readlink] = packagename
-        if __grains__.get('os_family') != NILRT_FAMILY_NAME:
-            for running_service in running_services:
-                _check_timeout(start_time, timeout)
-                if running_service not in restart_services and pid == running_services[running_service]:
-                    if packagename and packagename not in ignorelist:
-                        restart_services.append(running_service)
-                        name = running_service
+        for running_service in running_services:
+            _check_timeout(start_time, timeout)
+            if running_service not in restart_services and pid == running_services[running_service]:
+                if packagename and packagename not in ignorelist:
+                    restart_services.append(running_service)
+                    name = running_service
         if packagename and packagename not in ignorelist:
             program = '\t' + six.text_type(pid) + ' ' + readlink + ' (file: ' + six.text_type(path) + ')'
             if packagename not in packages:
@@ -637,13 +635,12 @@ def restartcheck(ignorelist=None, blacklist=None, excludepid=None, **kwargs):
             restartservicecommands.extend(['systemctl restart ' + s for s in packages[package]['systemdservice']])
         else:
             nonrestartable.append(package)
-        if __grains__.get('os_family') != NILRT_FAMILY_NAME and packages[package]['process_name'] in restart_services:
+        if packages[package]['process_name'] in restart_services:
             restart_services.remove(packages[package]['process_name'])
 
-    if __grains__.get('os_family') != NILRT_FAMILY_NAME:
-        for restart_service in restart_services:
-            _check_timeout(start_time, timeout)
-            restartservicecommands.extend(['systemctl restart ' + restart_service])
+    for restart_service in restart_services:
+        _check_timeout(start_time, timeout)
+        restartservicecommands.extend(['systemctl restart ' + restart_service])
 
     ret = _format_output(kernel_restart, packages, verbose, restartable, nonrestartable,
                          restartservicecommands, restartinitcommands)
