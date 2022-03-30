@@ -379,9 +379,6 @@ def _file_changed_nilrt(full_filepath):
     # Need timestamp in seconds so floor it using int()
     cur_timestamp = str(int(os.path.getmtime(full_filepath)))
 
-    print("PREV TIMESTAMP " + str(prev_timestamp))
-    print("CUR TIMESTAMP " + str(cur_timestamp))
-
     if prev_timestamp != cur_timestamp:
         return True
 
@@ -416,8 +413,6 @@ def _sysapi_changed_nilrt():
              - False if no nisysapi .ini files exist
     '''
     nisysapi_path = '/usr/local/natinst/share/nisysapi.ini'
-    print("OS PATH EXISTS : " + str(os.path.exists(nisysapi_path)))
-    print("FILE CHANGED NILRT : " + str(_file_changed_nilrt(nisysapi_path)))
     if os.path.exists(nisysapi_path) and _file_changed_nilrt(nisysapi_path):
         return True
 
@@ -498,9 +493,6 @@ def restartcheck(ignorelist=None, blacklist=None, excludepid=None, **kwargs):
             if __grains__.get('os_family') == NILRT_FAMILY_NAME:
                 # Check kernel modules and hardware API's for version changes
                 # If a restartcheck=True event was previously witnessed, propagate it
-                print("Kernel modules changed " + str(_kernel_modules_changed_nilrt(kernel)))
-                print("Sysapi changed " + str(_sysapi_changed_nilrt()))
-                print("salt changed " + str(__salt__['system.get_reboot_required_witnessed']()))
                 if not _kernel_modules_changed_nilrt(kernel) and \
                    not _sysapi_changed_nilrt() and \
                    not __salt__['system.get_reboot_required_witnessed']():
@@ -540,9 +532,7 @@ def restartcheck(ignorelist=None, blacklist=None, excludepid=None, **kwargs):
                 running_services[service] = int(service_show['ExecMainPID'])
 
     owners_cache = {}
-    print("WOW!")
     for deleted_file in _deleted_files():
-        print(str(deleted_file))
         if deleted_file is False:
             return {'result': False, 'comment': 'Could not get list of processes.'
                                                 ' (Do you have root access?)'}
@@ -579,8 +569,6 @@ def restartcheck(ignorelist=None, blacklist=None, excludepid=None, **kwargs):
                 if program not in packages[packagename]['processes']:
                     packages[packagename]['processes'].append(program)
 
-    print("WOW2")
-    print(str(kernel_restart))
     if not packages and not kernel_restart:
         return 'No packages seem to need to be restarted.'
 
