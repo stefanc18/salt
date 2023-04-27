@@ -743,6 +743,17 @@ class AsyncAuth(object):
                 # has the master returned that its maxed out with minions?
                 elif payload['load']['ret'] == 'full':
                     raise salt.ext.tornado.gen.Return('full')
+                elif payload['load']['ret'] == "systemlink_apikey_unauthorized":
+                    if payload['load']['msg']:
+                        log.critical(msg)
+                    else:
+                        log.critical(
+                            'The Salt Master has rejected this minion\'s apikey!\n'
+                            'To repair this issue, re-connect from SystemLink Client\n'
+                            'to a valid Salt Master. The Salt Minion will now exit.'
+                        )
+                    time.sleep(random.randint(10,20))
+                    sys.exit(salt.defaults.exitcodes.EX_NOPERM)
                 else:
                     log.error(
                         'The Salt Master has cached the public key for this '
