@@ -624,7 +624,12 @@ class MinionBase(object):
         if isinstance(opts['master'], list):
             conn = False
             last_exc = None
-            opts['master_uri_list'] = []
+
+            # if the connection to the saltmaster was lost,
+            # don't reinitialize the uri list to keep using the same one
+            if not failed:
+                opts['master_uri_list'] = []
+
             opts['local_masters'] = copy.copy(opts['master'])
 
             # shuffle the masters and then loop through them
@@ -637,14 +642,17 @@ class MinionBase(object):
                 else:
                     shuffle(opts['local_masters'])
 
-            # This sits outside of the connection loop below because it needs to set
-            # up a list of master URIs regardless of which masters are available
-            # to connect _to_. This is primarily used for masterless mode, when
-            # we need a list of master URIs to fire calls back to.
-            for master in opts['local_masters']:
-                opts['master'] = master
-                opts.update(prep_ip_port(opts))
-                opts['master_uri_list'].append(resolve_dns(opts)['master_uri'])
+            # if the connection to the saltmaster was lost,
+            # don't reinitialize the uri list to keep using the same one
+            if not failed:
+                # This sits outside of the connection loop below because it needs to set
+                # up a list of master URIs regardless of which masters are available
+                # to connect _to_. This is primarily used for masterless mode, when
+                # we need a list of master URIs to fire calls back to.
+                for master in opts['local_masters']:
+                    opts['master'] = master
+                    opts.update(prep_ip_port(opts))
+                    opts['master_uri_list'].append(resolve_dns(opts)['master_uri'])
 
             pub_channel = None
             while True:
@@ -665,8 +673,16 @@ class MinionBase(object):
                     )
                 for master in opts['local_masters']:
                     opts['master'] = master
-                    opts.update(prep_ip_port(opts))
-                    opts.update(resolve_dns(opts))
+
+                    # look for a different ip only after attempting current one 3 times
+                    if not failed or (failed and attempts > 3):
+                        opts.update(prep_ip_port(opts))
+                        opts.update(resolve_dns(opts))
+                    else:
+                        log.warn(
+                            'Connecting to the same master ip. Attempt %s of 3',
+                            attempts
+                        )
 
                     # on first run, update self.opts with the whole master list
                     # to enable a minion to re-use old masters if they get fixed
@@ -727,12 +743,12 @@ class MinionBase(object):
                     yield salt.ext.tornado.gen.sleep(opts['acceptance_wait_time'])
                 attempts += 1
                 if tries > 0:
-                    log.debug(
+                    log.error(
                         'Connecting to master. Attempt %s of %s',
                         attempts, tries
                     )
                 else:
-                    log.debug(
+                    log.error(
                         'Connecting to master. Attempt %s (infinite attempts)',
                         attempts
                     )
