@@ -743,12 +743,12 @@ class MinionBase(object):
                     yield salt.ext.tornado.gen.sleep(opts['acceptance_wait_time'])
                 attempts += 1
                 if tries > 0:
-                    log.error(
+                    log.debug(
                         'Connecting to master. Attempt %s of %s',
                         attempts, tries
                     )
                 else:
-                    log.error(
+                    log.debug(
                         'Connecting to master. Attempt %s (infinite attempts)',
                         attempts
                     )
