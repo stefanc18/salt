@@ -226,7 +226,7 @@ def setvals(grains, destructive=False):
         salt '*' grains.setvals "{'key1': 'val1', 'key2': 'val2'}"
     '''
     new_grains = grains
-    if not isinstance(new_grains, collections.Mapping):
+    if not isinstance(new_grains, collections.abc.Mapping):
         raise SaltException('setvals grains must be a dictionary.')
     grains = {}
     if os.path.isfile(__opts__['conf_file']):
