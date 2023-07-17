@@ -66,7 +66,14 @@ try:
 
 
 except ImportError:
-    from distro import linux_distribution
+    import distro
+
+    def linux_distribution():
+        return (
+            distro.id(),
+            distro.version(best=True),
+            distro.codename(),
+        )
 
 # Import salt libs
 import salt.exceptions
