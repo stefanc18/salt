@@ -273,7 +273,7 @@ def _load_config(section, options, default_value='', filename=INI_FILE):
         return results
     with salt.utils.files.fopen(filename, 'r') as config_file:
         config_parser = configparser.RawConfigParser(dict_type=CaseInsensitiveDict)
-        config_parser.readfp(config_file)
+        config_parser.read_file(config_file)
         for option in options:
             results[option] = _remove_quotes(config_parser.get(section, option)) \
                 if config_parser.has_option(section, option) else default_value
