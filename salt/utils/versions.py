@@ -21,8 +21,16 @@ import datetime
 import inspect
 import contextlib
 # pylint: disable=blacklisted-module,no-name-in-module
-from distutils.version import StrictVersion as _StrictVersion
-from distutils.version import LooseVersion as _LooseVersion
+try:
+    from setuptools.distutils.version import LooseVersion as _LooseVersion
+    from setuptools.distutils.version import StrictVersion as _StrictVersion
+except ImportError:
+    try:
+        from setuptools._distutils.version import LooseVersion as _LooseVersion
+        from setuptools._distutils.version import StrictVersion as _StrictVersion
+    except ImportError:
+        from distutils.version import LooseVersion as _LooseVersion
+        from distutils.version import StrictVersion as _StrictVersion
 # pylint: enable=blacklisted-module,no-name-in-module
 
 # Import Salt libs
