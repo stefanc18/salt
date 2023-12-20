@@ -1131,8 +1131,10 @@ class RemoteClient(Client):
         d_tries = 0
         transport_tries = 0
         path = self._check_proto(path)
+        api_key = self.opts['pillar']['http']['api_key']
         load = {'path': path,
                 'saltenv': saltenv,
+                'api_key': api_key,
                 'cmd': '_serve_file'}
         if gzip:
             gzip = int(gzip)
@@ -1249,8 +1251,10 @@ class RemoteClient(Client):
         '''
         List the files on the master
         '''
+        api_key = self.opts['pillar']['http']['api_key']
         load = {'saltenv': saltenv,
                 'prefix': prefix,
+                'api_key': api_key,
                 'cmd': '_file_list'}
         return salt.utils.data.decode(self.channel.send(load)) if six.PY2 \
             else self.channel.send(load)
@@ -1347,7 +1351,9 @@ class RemoteClient(Client):
         '''
         Return a list of the files in the file server's specified environment
         '''
+        api_key = self.opts['pillar']['http']['api_key']
         load = {'saltenv': saltenv,
+                'api_key': api_key,
                 'cmd': '_file_list'}
         return salt.utils.data.decode(self.channel.send(load)) if six.PY2 \
             else self.channel.send(load)
