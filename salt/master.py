@@ -1119,10 +1119,12 @@ class MWorker(salt.utils.process.SignalHandlingProcess):
 
         :param dict payload: The payload route to the appropriate handler
         '''
-        key = payload['enc']
-        load = payload['load']
-        ret = {'aes': self._handle_aes,
-               'clear': self._handle_clear}[key](load)
+        key = payload["enc"]
+        load = payload["load"]
+        if key == "aes":
+            ret = self.handle_aes(load)
+        else:
+            ret = self.handle_clear(load)
         raise salt.ext.tornado.gen.Return(ret)
 
     def _post_stats(self, start, cmd):
@@ -1752,8 +1754,16 @@ class AESFuncs(TransportMethods):
                 self.mminion.returners[fstr](load['jid'], load['load'])
 
             # Register the syndic
-            syndic_cache_path = os.path.join(self.opts['cachedir'], 'syndics', load['id'])
-            if not os.path.exists(syndic_cache_path):
+
+            # We are creating a path using user suplied input. Use the
+            # clean_path to prevent a directory traversal.
+            root = os.path.join(self.opts["cachedir"], "syndics")
+            syndic_cache_path = os.path.join(
+                self.opts["cachedir"], "syndics", load["id"]
+            )
+            if salt.utils.verify.clean_path(
+                root, syndic_cache_path
+            ) and not os.path.exists(syndic_cache_path):
                 path_name = os.path.split(syndic_cache_path)[0]
                 if not os.path.exists(path_name):
                     os.makedirs(path_name)
