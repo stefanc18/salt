@@ -1326,6 +1326,7 @@ class RemoteClient(Client):
                 return ret
         load = {'path': path,
                 'saltenv': saltenv,
+                'api_key': self.__get_api_key(),
                 'cmd': '_file_hash'}
         return self.channel.send(load)
 
